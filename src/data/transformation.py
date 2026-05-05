@@ -5,6 +5,7 @@ from imblearn.over_sampling import SMOTE
 import joblib
 
 def remove_outliers(df):
+    """Remove duplicates and filter extreme values."""
     df = df.copy()
     df = df.drop_duplicates()
     df = df[df["density"] <= 1.01]
@@ -17,6 +18,7 @@ def remove_outliers(df):
     return df
 
 def feature_engineering(df):
+    """Encode categorical features and discretize the target."""
     df = df.copy()
     df["type"] = df["type"].map({"red": 0, "white": 1})
     df["quality"] = pd.cut(
@@ -28,6 +30,7 @@ def feature_engineering(df):
     return df
 
 def split(dataframe, random_state=42, train_size=0.8):
+    """Split data, remove outliers, and scale features."""
     dataframe = feature_engineering(dataframe)
     X = dataframe.drop(columns=["quality"])
     y = dataframe["quality"]
@@ -56,33 +59,7 @@ def apply_smote(
     k_neighbors=5,
     random_state=42
 ):
-    """
-    Aplica SMOTE no conjunto de treino para balanceamento de classes.
-
-    Parameters
-    ----------
-    X_train : array-like or pd.DataFrame
-        Features do conjunto de treino.
-    y_train : array-like or pd.Series
-        Labels do conjunto de treino.
-    sampling_strategy : str, dict or float, default="auto"
-        Estratégia de balanceamento.
-        - "auto": balanceia todas as classes minoritárias até a majoritária
-        - dict: define número desejado por classe, ex: {0: 200, 2: 300}
-    k_neighbors : int, default=5
-        Número de vizinhos usados na interpolação.
-        Use valores menores (ex: 3) para classes muito pequenas.
-    random_state : int, default=42
-        Reprodutibilidade.
-
-    Returns
-    -------
-    X_resampled : array-like
-        Features após SMOTE.
-    y_resampled : array-like
-        Labels após SMOTE.
-    """
-
+    """Apply SMOTE to balance the training data."""
     smote = SMOTE(
         sampling_strategy=sampling_strategy,
         k_neighbors=k_neighbors,
