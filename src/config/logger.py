@@ -13,6 +13,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
+
 class LoggerSettings(BaseSettings):
     """
     Logger Configuration settings for the application.
