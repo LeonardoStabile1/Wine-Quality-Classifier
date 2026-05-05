@@ -30,6 +30,7 @@ class ModelSettings(BaseSettings):
     )
     model_path: DirectoryPath
     model_name: str
+    report_path: DirectoryPath
 
 
 model_settings = ModelSettings()
