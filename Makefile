@@ -6,12 +6,14 @@ PROJECT = src
 .PHONY: help install lint test run clean
 
 help:
-	@echo Targets disponíveis:
-	@echo   install   - Instala dependências
-	@echo   lint      - Roda flake8
-	@echo   test      - Executa pytest
-	@echo   run       - Executa pipeline de treino
-	@echo   clean     - Remove arquivos temporários
+	@echo "Targets disponíveis:"
+	@echo ""
+	@echo "  install            Instala dependências"
+	@echo "  lint               Roda flake8"
+	@echo "  test               Executa pytest"
+	@echo "  run                Executa pipeline de treino"
+	@echo "                     Exemplo: make run ARGS=\"--simple\""
+	@echo "  clean              Remove arquivos temporários"
 
 install:
 	$(PIP) install -r requirements.txt
@@ -23,7 +25,7 @@ test:
 	$(PYTHON) -m pytest
 
 run:
-	$(PYTHON) -m src.pipelines.training_pipeline
+	$(PYTHON) -m src.pipelines.training_pipeline $(ARGS)
 
 clean:
 	$(PYTHON) -c "import pathlib; \

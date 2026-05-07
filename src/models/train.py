@@ -14,16 +14,19 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.utils.class_weight import compute_sample_weight
-from xgboost import XGBClassifier
+from xgboost import XGBClassifier, callback
 import pandas as pd
 
 
 def train_xgboost(
     X_train,
     y_train,
-    n_iter: int = 200,
-    cv: int = 5,
+    X_val,
+    y_val,
+    n_iter: int = 40,
+    cv: int = 3,
     random_state: int = 42,
+    skip_random_search: bool = False,
 ) -> Tuple[XGBClassifier, Dict[str, Any]]:
     """
     Train an XGBoost classifier using randomized hyperparameter search.
@@ -31,69 +34,147 @@ def train_xgboost(
     Args:
         X_train: Training features.
         y_train: Training labels.
+        X_val: Validation features.
+        y_val: Validation labels.
         n_iter: Number of parameter settings sampled.
         cv: Number of cross-validation folds.
         random_state: Random seed.
+        skip_random_search:
+            If True, skip hyperparameter search.
 
     Returns:
-        Tuple containing the best estimator and the best hyperparameters.
+        Tuple containing trained model and best parameters.
     """
+
     if X_train is None or y_train is None:
-        logger.error("Training data cannot be None")
         raise ValueError("X_train and y_train must not be None")
 
     if len(X_train) == 0 or len(y_train) == 0:
-        logger.error("Training data is empty")
         raise ValueError("Training data cannot be empty")
 
     if len(X_train) != len(y_train):
-        logger.error("Mismatched shapes | X_train={} y_train={}", len(X_train), len(y_train))
         raise ValueError("X_train and y_train must have the same length")
 
-    sample_weights = compute_sample_weight(class_weight="balanced", y=y_train)
+    sample_weights = compute_sample_weight(
+        class_weight="balanced",
+        y=y_train,
+    )
+
+    logger.info(
+        "Starting XGBoost training | samples={} features={}",
+        len(X_train),
+        X_train.shape[1],
+    )
+
+    # =========================================================
+    # SIMPLE TRAINING
+    # =========================================================
+
+    if skip_random_search:
+        best_params = {
+            "n_estimators": 800,
+            "max_depth": 6,
+            "learning_rate": 0.05,
+            "min_child_weight": 3,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "gamma": 0.1,
+            "reg_alpha": 0.0,
+            "reg_lambda": 1.0,
+        }
+
+        model = XGBClassifier(
+            **best_params,
+            objective="multi:softmax",
+            num_class=3,
+            eval_metric="mlogloss",
+            random_state=random_state,
+            tree_method="hist",
+            n_jobs=-1,
+        )
+
+        model.fit(
+            X_train,
+            y_train,
+            sample_weight=sample_weights,
+            eval_set=[(X_val, y_val)],
+            verbose=False,
+        )
+
+        logger.info("Simple XGBoost training finished")
+
+        return model, best_params
+
+    # =========================================================
+    # RANDOM SEARCH
+    # =========================================================
 
     param_dist = {
-        "n_estimators": randint(200, 1000),
-        "learning_rate": [0.005, 0.01, 0.05, 0.1, 0.2],
-        "max_depth": randint(3, 15),
-        "min_child_weight": randint(1, 15),
-        "subsample": uniform(0.5, 0.5),
-        "colsample_bytree": uniform(0.5, 0.5),
-        "gamma": uniform(0, 0.5),
-        "reg_alpha": uniform(0, 1),
-        "reg_lambda": uniform(0.5, 2),
+        "n_estimators": randint(200, 800),
+        "learning_rate": [0.01, 0.03, 0.05, 0.1],
+        "max_depth": randint(3, 8),
+        "min_child_weight": randint(1, 8),
+        "subsample": uniform(0.7, 0.3),
+        "colsample_bytree": uniform(0.7, 0.3),
+        "gamma": uniform(0.0, 0.3),
+        "reg_alpha": uniform(0.0, 0.5),
+        "reg_lambda": uniform(0.5, 1.5),
     }
 
-    model = XGBClassifier(
-        random_state=random_state,
-        objective="multi:softprob",
+    base_model = XGBClassifier(
+        objective="multi:softmax",
         num_class=3,
         eval_metric="mlogloss",
+        random_state=random_state,
+        tree_method="hist",
+        n_jobs=-1,
     )
 
     search = RandomizedSearchCV(
-        estimator=model,
+        estimator=base_model,
         param_distributions=param_dist,
         n_iter=n_iter,
         cv=cv,
         scoring="f1_weighted",
-        refit=True,
-        return_train_score=True,
         random_state=random_state,
+        n_jobs=-1,
+        verbose=1,
+    )
+
+    logger.info("Starting Random Search")
+
+    search.fit(
+        X_train,
+        y_train,
+        sample_weight=sample_weights,
+    )
+
+    best_params = search.best_params_
+
+    logger.info("Random Search finished")
+    logger.info("Best params: {}", best_params)
+
+    final_model = XGBClassifier(
+        **best_params,
+        objective="multi:softmax",
+        num_class=3,
+        eval_metric="mlogloss",
+        random_state=random_state,
+        tree_method="hist",
         n_jobs=-1,
     )
 
-    logger.info("Starting XGBoost training | samples={} features={}", len(X_train), X_train.shape[1])
-
-    search.fit(X_train, y_train, sample_weight=sample_weights)
-
-    logger.info(
-        "Training completed | best_score={} best_params={}",
-        round(search.best_score_, 4),
-        search.best_params_,
+    final_model.fit(
+        X_train,
+        y_train,
+        sample_weight=sample_weights,
+        eval_set=[(X_val, y_val)],
+        verbose=False,
     )
 
-    return search.best_estimator_, search.best_params_
+    logger.info("Final model training finished")
+
+    return final_model, best_params
 
 
 def save_artifacts(

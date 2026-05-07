@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Tuple
+import argparse
 
 import pandas as pd
 from loguru import logger
@@ -16,6 +17,18 @@ DATA_PATH = PROJECT_ROOT / "dataset" / "wine_quality_red_white.csv"
 MODEL_NAME = model_settings.model_name
 MODEL_PATH = model_settings.model_path
 REPORT_PATH = model_settings.report_path
+
+
+def _parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--simple",
+        action="store_true",
+        help="Skip random search and use default hyperparameters",
+    )
+
+    return parser.parse_args()
 
 
 def _validate_dataframe(df: pd.DataFrame) -> None:
@@ -42,14 +55,19 @@ def _validate_paths() -> None:
         raise ValueError("REPORT_PATH must be defined")
 
 
-def training_model() -> Tuple:
+def training_model(simple: bool = False) -> Tuple:
     """
     Execute the full training pipeline: data loading, preprocessing,
     model training, artifact persistence, and report generation.
 
+    Args:
+        simple:
+            If True, skips randomized hyperparameter search.
+
     Returns:
         Tuple containing trained model, parameters, and evaluation outputs.
     """
+
     logger.info("Training pipeline started")
 
     _validate_paths()
@@ -57,24 +75,43 @@ def training_model() -> Tuple:
     dataframe = load_data(DATA_PATH)
     _validate_dataframe(dataframe)
 
-    X_train, X_test, y_train, y_test, scaler = split(dataframe)
+    X_train, X_val, X_test, y_train, y_val, y_test, scaler = split(dataframe)
 
     logger.info(
         "Data split completed | X_train={} X_test={}",
-        X_train.shape, X_test.shape
+        X_train.shape,
+        X_test.shape,
     )
 
     X_train, y_train = apply_smote(X_train, y_train)
 
     logger.info("SMOTE applied | samples={}", len(X_train))
 
-    model, params = train_xgboost(X_train, y_train)
+    model, params = train_xgboost(
+        X_train,
+        y_train,
+        X_val,
+        y_val,
+        skip_random_search=simple,
+    )
 
-    save_artifacts(MODEL_PATH, X_train, MODEL_NAME, model, params, scaler)
+    save_artifacts(
+        MODEL_PATH,
+        X_train,
+        MODEL_NAME,
+        model,
+        params,
+        scaler,
+    )
 
     y_pred = model.predict(X_test)
 
-    report = generate_reports(REPORT_PATH, MODEL_NAME, y_test, y_pred)
+    report = generate_reports(
+        REPORT_PATH,
+        MODEL_NAME,
+        y_test,
+        y_pred,
+    )
 
     logger.info("Training pipeline finished successfully")
 
@@ -82,4 +119,11 @@ def training_model() -> Tuple:
 
 
 if __name__ == "__main__":
-    training_model()
+    args = _parse_args()
+
+    if args.simple:
+        logger.info("Simple training selected")
+    else:
+        logger.info("Random Search selected")
+
+    training_model(simple=args.simple)

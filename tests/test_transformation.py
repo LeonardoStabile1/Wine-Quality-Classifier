@@ -56,11 +56,13 @@ def test_feature_engineering_invalid_type():
 
 def test_split_basic():
     df = make_valid_df()
-    X_train, X_test, y_train, y_test, scaler = split(df)
+    X_train, X_val, X_test, y_train, y_val, y_test, scaler = split(df)
 
     assert not X_train.empty
+    assert not X_val.empty
     assert not X_test.empty
     assert len(X_train) == len(y_train)
+    assert len(X_val) == len(y_val)
     assert len(X_test) == len(y_test)
 
 
