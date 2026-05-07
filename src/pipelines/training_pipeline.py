@@ -70,7 +70,7 @@ def training_model() -> Tuple:
 
     model, params = train_xgboost(X_train, y_train)
 
-    save_artifacts(MODEL_PATH, MODEL_NAME, model, params, scaler)
+    save_artifacts(MODEL_PATH, X_train, MODEL_NAME, model, params, scaler)
 
     y_pred = model.predict(X_test)
 

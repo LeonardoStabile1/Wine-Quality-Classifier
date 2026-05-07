@@ -1,17 +1,17 @@
-PYTHON = .venv/bin/python
-PIP = .venv/bin/pip
+PYTHON = python
+PIP = python -m pip
 
 PROJECT = src
 
 .PHONY: help install lint test run clean
 
 help:
-	@echo "Targets disponíveis:"
-	@echo "  install   - Instala dependências"
-	@echo "  lint      - Roda flake8"
-	@echo "  test      - Executa pytest"
-	@echo "  run       - Executa pipeline de treino"
-	@echo "  clean     - Remove arquivos temporários"
+	@echo Targets disponíveis:
+	@echo   install   - Instala dependências
+	@echo   lint      - Roda flake8
+	@echo   test      - Executa pytest
+	@echo   run       - Executa pipeline de treino
+	@echo   clean     - Remove arquivos temporários
 
 install:
 	$(PIP) install -r requirements.txt
@@ -26,8 +26,8 @@ run:
 	$(PYTHON) -m src.pipelines.training_pipeline
 
 clean:
-	find . -type d -name "__pycache__" -exec rm -r {} +
-	find . -type f -name "*.pyc" -delete
-	find . -type f -name "*.pyo" -delete
-	find . -type f -name "*.log" -delete
-	rm -rf .pytest_cache
+	$(PYTHON) -c "import pathlib; \
+[ p.unlink() for p in pathlib.Path('.').rglob('*.pyc') ]; \
+[ p.unlink() for p in pathlib.Path('.').rglob('*.pyo') ]; \
+[ p.unlink() for p in pathlib.Path('.').rglob('*.log') ]; \
+[ p.rmdir() for p in pathlib.Path('.').rglob('__pycache__') if p.is_dir() ]"

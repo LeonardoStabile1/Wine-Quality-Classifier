@@ -15,6 +15,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.utils.class_weight import compute_sample_weight
 from xgboost import XGBClassifier
+import pandas as pd
 
 
 def train_xgboost(
@@ -97,6 +98,7 @@ def train_xgboost(
 
 def save_artifacts(
     path: str,
+    X_train: pd.DataFrame,
     model_name: str,
     model,
     params: Dict[str, Any],
@@ -140,6 +142,7 @@ def save_artifacts(
         "model": model,
         "scaler": scaler,
         "params": params,
+        "features": list(X_train.columns)
     }
 
     try:
