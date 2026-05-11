@@ -11,7 +11,7 @@ help:
 	@echo "  install            Instala dependências"
 	@echo "  lint               Roda flake8"
 	@echo "  test               Executa pytest"
-	@echo "  run                Executa pipeline de treino"
+	@echo "  train              Executa pipeline de treino"
 	@echo "                     Exemplo: make run ARGS=\"--simple\""
 	@echo "  clean              Remove arquivos temporários"
 
@@ -24,8 +24,9 @@ lint:
 test:
 	$(PYTHON) -m pytest
 
-run:
+train:
 	$(PYTHON) -m src.pipelines.training_pipeline $(ARGS)
+	make clean
 
 clean:
 	$(PYTHON) -c "import pathlib; \
