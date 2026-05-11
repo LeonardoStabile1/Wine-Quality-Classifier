@@ -2,7 +2,6 @@
 .venv
 .pytest_cache
 __pycache__
-dataset/
 dummy_models/
 logs/
 models/
