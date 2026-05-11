@@ -100,6 +100,14 @@ def split(
         random_state=random_state
     )
 
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train,
+        y_train,
+        test_size = (1-train_size),
+        stratify = y_train,
+        random_state = random_state
+    )
+
     train_df = X_train.assign(quality=y_train)
     train_df = remove_outliers(train_df)
 
@@ -114,6 +122,12 @@ def split(
         index=X_train.index
     )
 
+    X_val_scaled = pd.DataFrame(
+        scaler.transform(X_val),
+        columns=X_val.columns,
+        index=X_val.index
+    )
+
     X_test_scaled = pd.DataFrame(
         scaler.transform(X_test),
         columns=X_test.columns,
@@ -125,7 +139,7 @@ def split(
         X_train_scaled.shape, X_test_scaled.shape
     )
 
-    return X_train_scaled, X_test_scaled, y_train, y_test, scaler
+    return X_train_scaled, X_val_scaled, X_test_scaled, y_train, y_val, y_test, scaler
 
 
 def apply_smote(
