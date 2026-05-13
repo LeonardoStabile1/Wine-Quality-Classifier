@@ -21,6 +21,7 @@ This project was developed to classify wine quality categories using supervised 
 
 The repository was structured following software engineering and MLOps best practices, with focus on modularity, reproducibility, testing, and production-ready organization.
 
+To see the instructions on how to install and run this project, check the [running_this_project.md](running_this_project.md).
 
 
 ## Features
@@ -94,13 +95,17 @@ In addition to prediction endpoints, the service exposes health and readiness ch
 {
   "data": [
     {
-      "density": 0,
+      "fixed acidity": 0,
+      "volatile acidity": 0,
+      "citric acid": 0,
+      "residual sugar": 0,
       "chlorides": 0,
-      "fixed_acidity": 0,
-      "free_sulfur_dioxide": 0,
-      "citric_acid": 0,
-      "total_sulfur_dioxide": 0,
+      "free sulfur dioxide": 0,
+      "total sulfur dioxide": 0,
+      "density": 0,
+      "pH": 0,
       "sulphates": 0,
+      "alcohol": 0,
       "type": "red"
     }
   ]

@@ -64,7 +64,7 @@ def ready():
 
 
 @app.post("/predict")
-def predict(payload: Any):
+def predict(payload: PredictRequest):
     df = pd.DataFrame(
         [item.model_dump() for item in payload.data]
     )
