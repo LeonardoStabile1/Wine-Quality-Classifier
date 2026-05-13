@@ -14,7 +14,7 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.utils.class_weight import compute_sample_weight
-from xgboost import XGBClassifier, callback
+from xgboost import XGBClassifier
 import pandas as pd
 
 

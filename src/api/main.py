@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import create_model
-from typing import Any, List, Literal
+from typing import List, Literal
 import pandas as pd
 import joblib
 from pathlib import Path

@@ -1,2 +1,7 @@
 [tool.flake8]
 max-line-length = 130
+
+exclude = [
+    "__init__.py",
+    "tests/"
+]

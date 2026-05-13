@@ -103,9 +103,9 @@ def split(
     X_train, X_val, y_train, y_val = train_test_split(
         X_train,
         y_train,
-        test_size = (1-train_size),
-        stratify = y_train,
-        random_state = random_state
+        test_size=(1 - train_size),
+        stratify=y_train,
+        random_state=random_state
     )
 
     train_df = X_train.assign(quality=y_train)
